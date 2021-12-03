@@ -36,8 +36,8 @@
             border-radius: 50%;
             z-index: -1;
             background: conic-gradient(var(--color) var(--progress), gray var(--progress));
-            -webkit-mask-image: radial-gradient(transparent 65%, black calc(65% + 0.5px));
-            mask-image: radial-gradient(transparent 65%, black calc(65% + 0.5px));
+            -webkit-mask-image: radial-gradient(transparent 62%, black calc(62% + 0.5px));
+            mask-image: radial-gradient(transparent 62%, black calc(62% + 0.5px));
         }
 
         li {
@@ -158,9 +158,13 @@
         } else if (percentage <= 10) {
             setColor('red')
         }
-        updateCenterInfo()
+
         if (percentage > 0) {
+            updateCenterInfo()
             percentageTimer = setTimeout(percentageTimeout, percentageInterval);
+            return;
+        } else {
+            progressWidget.innerHTML = "Timeout!"
         }
     }
 
@@ -174,11 +178,10 @@
 
     const minutesTimeout = () => {
         minutes--;
-        updateCenterInfo();
         if (minutes > 0) {
+            updateCenterInfo();
             minutesTimer = setTimeout(minutesTimeout, minutesInterval);
         }
-        progressWidget.innerHTML = "Timeout!!!"
     }
 
     const reset = () => {
@@ -219,9 +222,6 @@
         slider.disabled = true;
         started = true;
     }
-
     reset()
-
 </script>
-
 </html>
