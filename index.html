@@ -45,7 +45,6 @@
             font-style: bold;
         }
 
-
         .slider {
             -webkit-appearance: none;
             width: 100%;
@@ -103,7 +102,7 @@
         <input id="slider" class="slider" type="range" value="30" min="1" max="120">
     </div>
     <div class="container">
-        <button class="btn success" onclick="start()">Start</button>
+        <button id="submit" class="btn success" onclick="onButtonClick()">Start</button>
     </div>
     <ul>
         <li>What did you do yesterday?</li>
@@ -114,61 +113,111 @@
 
 <script>
     const TIMEOUT = 100;
-    const radialProgress = document.querySelector('.RadialProgress');
+    const progressWidget = document.querySelector('.RadialProgress');
     const slider = document.getElementById("slider");
-    var progress = 100;
-    var lastMin = 30;
-    const setProgress = (progress) => {
-        const value = `${progress}%`;
-        radialProgress.style.setProperty('--progress', value)
-        const minutes = 30 * progress / 100
-        if (minutes < lastMin) {
-            lastMin--;
-        }
-        radialProgress.innerHTML = value + "<br>" + lastMin + "Min"
-        if (progress == 0) {
-            radialProgress.innerHTML = "The End"
-        }
-        // radialProgress.setAttribute('aria-valuenow', value)
-    }
+    const button = document.getElementById("submit");
 
-    const setColor = (color) => {
-        const value = `${color}`
-        radialProgress.style.setProperty('--color', color)
-    }
+    var color = 'green';
 
-    const timeout = () => {
-        progress--;
-        setProgress(progress)
+    var minutes = 30;
+    var percentage = 100;
+    var progress = 360;
 
-        if (progress <= 20 && progress > 10) {
-            setColor('darkorange')
-        } else if (progress <= 10) {
-            setColor('red')
-        }
+    var minutesTimer;
+    var percentageTimer;
+    var progressTimer;
 
-        if (progress > 0) {
-            setTimeout(timeout, TIMEOUT);
-            return;
-        }
-    }
+    const minutesInterval = 60000; // 60 seconds
+    var percentageInterval;
+    var progressInterval;
 
     slider.oninput = function () {
-        lastMin = slider.value
-        radialProgress.innerHTML = "100%<br>" + slider.value + "Min"
-    };
-
-    const reset = () => {
-        lastMin = slider.value
-        progress = 100
-        setProgress(progress)
-        setColor('green')
+        minutes = slider.value
+        updateCenterInfo();
     }
 
-    const start = () => {
+    const setProgress = () => {
+        const value = `${progress}deg`;
+        progressWidget.style.setProperty('--progress', value)
+    }
+
+    const setColor = (c) => {
+        color = `${c}`
+        progressWidget.style.setProperty('--color', color)
+    }
+
+    const updateCenterInfo = () => {
+        progressWidget.innerHTML = percentage + "%<br>" + minutes + "min"
+    }
+
+    const percentageTimeout = () => {
+        percentage--;
+
+        if (percentage <= 20 && percentage > 10) {
+            setColor('darkorange')
+        } else if (percentage <= 10) {
+            setColor('red')
+        }
+        updateCenterInfo()
+        if (percentage > 0) {
+            percentageTimer = setTimeout(percentageTimeout, percentageInterval);
+        }
+    }
+
+    const progressTimeout = () => {
+        progress--;
+        setProgress();
+        if (progress > 0) {
+            progressTimer = setTimeout(progressTimeout, progressInterval);
+        }
+    }
+
+    const minutesTimeout = () => {
+        minutes--;
+        updateCenterInfo();
+        if (minutes > 0) {
+            minutesTimer = setTimeout(minutesTimeout, minutesInterval);
+        }
+        progressWidget.innerHTML = "Timeout!!!"
+    }
+
+    const reset = () => {
+        color = 'green'
+        minutes = slider.value
+        percentage = 100;
+        progress = 360;
+
+        percentageInterval = minutes * 600;
+        progressInterval = minutes * 60000 / 360;
+
+        setColor(color)
+        setProgress()
+        updateCenterInfo();
+    }
+
+    var started = false;
+    const onButtonClick = () => {
+        if (started) {
+            clearTimeout(minutesTimer);
+            clearTimeout(percentageTimer);
+            clearTimeout(progressTimer);
+
+            started = false;
+            slider.disabled = false;
+            button.innerHTML = "Start"
+            reset();
+            return;
+        }
+
         reset();
-        setTimeout(timeout, TIMEOUT)
-        slider.disable = true;
+
+        minutesTimer = setTimeout(minutesTimeout, minutesInterval);
+        percentageTimer = setTimeout(percentageTimeout, percentageInterval);
+        progressTimer = setTimeout(progressTimeout, progressInterval);
+
+        button.innerHTML = "Stop/Reset"
+        slider.disabled = true;
+        started = true;
     }
 
     reset()
